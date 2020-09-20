@@ -2,7 +2,7 @@
 '''
 # An Audio MetaData Editor Application.
 # Author : R.Cheshami
-# Cimpany : Adak Free Way .. http://afw.ir
+# Company : Adak Free Way .. http://afw.ir
 '''
 import sys, os, re, glob2, eyed3, pprint
 from pathlib import Path
@@ -37,22 +37,22 @@ def get_logger(msg='', name=None, level=logging.DEBUG, create_file=False):
 class _Getch:
     """Gets a single character from standard input.  Does not echo to the
 screen."""
-    def __init__(self, ):
+    def __init__(self):
         try:
             self.impl = _GetchWindows()
         except ImportError:
             self.impl = _GetchUnix()
 
-    def __call__(self, ): return self.impl()
+    def __call__(self): return self.impl()
 
 
 class _GetchUnix:
     """Fetch and character using the termios module."""
-    def __init__(self, ):
+    def __init__(self):
         import tty, sys
         from select import select
 
-    def __call__(self, ):
+    def __call__(self):
         import sys, tty, termios
         from select import select
 
@@ -104,7 +104,7 @@ def getIMG(self, audiofile):
         if IMG.picture_type == 3:
             return IMG.image_data
 
-def getchar(self, ):
+def getchar(self):
     try:
         import msvcrt
         getch = msvcrt.getch
@@ -298,7 +298,7 @@ class MD3:
         md5.update(key)
         return md5.hexdigest()
 
-    def EchoMimeType(self, ):
+    def EchoMimeType(self):
         pass
 
     def emptyTag(self, audiofile):
@@ -331,7 +331,7 @@ class MD3:
                 print("Writing image file: , {0}{1}-{2}_{3}.jpg".format(path, self.__audiofile.tag.artist, self.__audiofile.tag.album, 'COVER_FRONT'))
                 self.__fw.write(self.__img.image_data)
 
-    def get_album_art2(self, ):
+    def get_album_art2(self):
         FRONT_COVER = eyed3.id3.frames.ImageFrame.FRONT_COVER
         audiofile = eyed3.load("test.id3")
         IMAGES = audiofile.tag.images
