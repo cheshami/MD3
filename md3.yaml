@@ -1,0 +1,18 @@
+version: 1
+formatters:
+  md3:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: md3
+    stream: ext://sys.stdout
+loggers:
+  md3Logger:
+    level: DEBUG
+    handlers: [console]
+    propagate: no
+root:
+  level: DEBUG
+  handlers: [console]

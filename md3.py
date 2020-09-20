@@ -4,34 +4,43 @@
 # Author : R.Cheshami
 # Company : Adak Free Way .. http://afw.ir
 '''
-import sys, os, re, glob2, eyed3, pprint
-from pathlib import Path
+import sys, os, re, glob2
 from os import path
+from pathlib import Path
+import threading
+import logging, logging.config
 import datetime
-import pandas as pd
 import csv
-import logging
+import eyed3
+import pprint
 
-def get_logger(msg='', name=None, level=logging.DEBUG, create_file=False):
-    # DEBUG INFO WARNING ERROR CRITICAL
-    # get_logger('msg', 'MD3Logger', 'WARNING')
-    if name is None:
-        name = inspect.stack()[1][1].split('.')[0]
-    formatter = logging.Formatter(
-        "MD3 %(levelname)s Logging Message: %(asctime)s - %(process)d -  - %(threadName)s - %(name)s %(message)s")
-    log = logging.getLogger(name)
-    log = logging.StreamHandler()
-    log.setLevel(level)
-    log.setFormatter(formatter)
-    if create_file:
-        # create file handler for logger.
-        fh = logging.FileHandler('md3.log')
-        fh.setLevel(level)
-        fh.setFormatter(formatter)
-        logging.root.addHandler(fh)
-    logging.root.addHandler(log)
-    return log
+class logger:
+    def __init__(self, msg='',cfname=None, name=None, level=logging.DEBUG, create_file=False):
+        self.cfname=''
+        with open('md3.config.yaml', 'r') as f:
+            config = yaml.safe_load(f.read())
+            logging.config.dictConfig(config)
+            logger = logging.getLogger(__name__)
 
+    def get_logger():
+        # DEBUG INFO WARNING ERROR CRITICAL
+        # get_logger('msg', 'MD3Logger', 'WARNING')
+        if name is None:
+            name = inspect.stack()[1][1].split('.')[0]
+        formatter = logging.Formatter(
+            "MD3 %(levelname)s Logging Message: %(asctime)s - %(process)d -  - %(threadName)s - %(name)s %(message)s")
+        log = logging.getLogger(name)
+        log = logging.StreamHandler()
+        log.setLevel(level)
+        log.setFormatter(formatter)
+        if create_file:
+            # create file handler for logger.
+            fh = logging.FileHandler('md3.log')
+            fh.setLevel(level)
+            fh.setFormatter(formatter)
+            logging.root.addHandler(fh)
+        logging.root.addHandler(log)
+        return log
 
 
 class _Getch:
@@ -98,31 +107,9 @@ class _GetchWindows:
         else:
             return
 
-def getIMG(self, audiofile):
-    IMGS = audiofile.tag.images
-    for IMG in IMGS:
-        if IMG.picture_type == 3:
-            return IMG.image_data
 
-def getchar(self):
-    try:
-        import msvcrt
-        getch = msvcrt.getch
-    except:
-        import sys, tty, termios
-        def _unix_getch():
-            """Get a single character from stdin, Unix version"""
 
-            fd = sys.stdin.fileno()
-            old_settings = termios.tcgetattr(fd)
-            try:
-                tty.setraw(sys.stdin.fileno())          # Raw read
-                ch = sys.stdin.read(1)
-            finally:
-                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-            return ch
 
-    return _unix_getch
 
 
 
@@ -160,6 +147,33 @@ def getchar(self):
 class MMD3():
     def __init__(self):
         self.__csvlist = ''
+
+    def getchar(self):
+        try:
+            import msvcrt
+            getch = msvcrt.getch
+        except:
+            import sys, tty, termios
+            def _unix_getch():
+                """Get a single character from stdin, Unix version"""
+
+                fd = sys.stdin.fileno()
+                old_settings = termios.tcgetattr(fd)
+                try:
+                    tty.setraw(sys.stdin.fileno())          # Raw read
+                    ch = sys.stdin.read(1)
+                finally:
+                    termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+                return ch
+
+        return _unix_getch
+
+
+    def getIMG(self, audiofile):
+        IMGS = audiofile.tag.images
+        for IMG in IMGS:
+            if IMG.picture_type == 3:
+                return IMG.image_data
 
     def no_padding(self, info):
         # this will remove all padding
@@ -282,9 +296,7 @@ class MD3:
         ***********
         md3.getTagz(f)
         md3.setTags(f)
-    """
-    import eyed3
-    
+    """    
     def __init__(self):
         print('__init Func ...')
         self.__csvlist = ''
@@ -536,19 +548,22 @@ class MD3:
         return self.__mp3s
 
 
-def main():
-    pp = pprint.PrettyPrinter(indent=4, sort_dicts=True)
-    print('WellCome To MD3')
+def main(argv):
+    print('WellCome To MD3.\n\n Start Time: ', datetime.datetime.now())
 
-    path = '/home/ro/Music/OldCD'
-    filename = '/md3.csv'
+
+
+    pp = pprint.PrettyPrinter(indent=4, sort_dicts=True)
+    mycsv = MD3()
+
+    path = '/home/ro/Music/OldCD/'
+    filename = 'md3.csv'
     pf = ''.join((path, filename))
 
-    mp3s = glob2.glob(path + '/**/*.mp3')
+    mp3s = glob2.glob(path + '**/*.mp3')
 
     if type(mp3s) is list:
         print(mp3s)
-        mycsv = MD3()
         SongsData = mycsv.splitMP3s(mp3s)
         for SongData in SongsData:
             mycsv.showAudioTags(SongData)
@@ -563,8 +578,10 @@ def main():
     #mp3s = mycsv.splitCSVlist(csvlist)
     #mycsv.saveTagsFromCSV(pf)
 
-if __name__ == '__main__':
-    main()
     #MMD3.mutgReadTags(mp3s)
     #MMD3.embed_album_art('/home/ro/Music/md3/Ball.jpg', '/home/ro/Music/md3/donya.mp3')
     #MD3.get_album_art('/home/ro/Music/md3/','/home/ro/Music/md3/donya.mp3')
+    print('Bye.\n\n End Time: ', datetime.datetime.now())
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))
