@@ -6,5 +6,5 @@ it can find all mp3 files from the path you entered, also recursivly.
 Save all mp3 metadata in csv file from path, then you can edit the csv file.
 after that you can update your mp3 metadata(set metadata) from the edited csv file.
 
-for now it CLI not work.it work just in python
-it will very good if anybody can help me to develop this application.
+for now this application not work in CLI( Command Line Interface ).it work just in Python3
+and higher versions, it will be very good if anybody can help me to develop and extend this application.
