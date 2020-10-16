@@ -550,6 +550,7 @@ class MEyed3:
             with open(pf, 'a', newline='') as self.__csvfile:
                 for self.__row in csvlist:
                     writer = csv.DictWriter(self.__csvfile, self.__row)
+                    print(writer)
                     writer.writeheader()
                 print(' -- file Saved.')
             self.__csvfile.close()
@@ -657,8 +658,10 @@ def main(argv):
         SongsData = mymp3s.getMP3sTags(mp3s)
         
     if type(OGGs) is list:
-        SongsData += myOGGs.getOGGsTags(OGGs)
+        oggSongsData = []
+        oggSongsData += myOGGs.getOGGsTags(OGGs)
 
+    pp.pprint(SongsData)
     mymp3s.saveCSVf(pf, SongsData)
     #fi = ''.join((path,'donya.OGG'))
     #mymp3s.setTagVersion(fi, '2.4.0')
