@@ -604,7 +604,7 @@ class MEyed3:
             self.__mp3s.append(fp)
         return self.__mp3s
 
-def get_args():
+def get_args(args):
     import argparse
 
     description = (
@@ -627,7 +627,7 @@ def main(argv):
 
     pp = pprint.PrettyPrinter(indent=4, sort_dicts=True)
 
-    args = get_args()
+    args = get_args(argv)
     
     path = args.path
     csv_filename = args.csv
@@ -637,7 +637,9 @@ def main(argv):
     if not csv_filename:
         csv_filename = 'md3.csv'
     if not path:
-        path = '/home/ro/Music/md3/'
+        home = Path.home()
+        print(home)
+        path = str(home) + '/Music/md3/'
 
     pf = ''.join((path, csv_filename))
 
@@ -647,7 +649,7 @@ def main(argv):
     try:
         if os.path.isfile(pf):
             mp3s = glob2.glob(path + '**/*.mp3')
-            OGGs = glob2.glob(path + '**/*.OGG')
+            OGGs = glob2.glob(path + '**/*.ogg')
     except Exception:
         print('{} Not find.', format(pf))
 
