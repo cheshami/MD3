@@ -275,24 +275,28 @@ class MMutagen3:
 
 class MTinyTag3:
     '''for OGG files and easer get Cover Images'''
+
     def __init__(self):
         self.__SongsData = []
 
-    def getOGGsTags(self, OGGFs):
+    def get_tags(self, OGGFs):
+        from tinytag import TinyTag
         self.__tags = []
+
 
         if type(OGGFs) == list:
             for self.__OGGF in OGGFs:
-                self.__tags.append(self.showOGGTags(self.__OGGF))
+                self.__tags.append(TinyTag.get(self.__OGGF))
+                print(self.__OGGF)
+
         else:
-            self.__tags.append(self.showOGGTags(self.__OGGFs))
+            self.__tags.append(TinyTag.get(self.__OGGF))
+            print(self.__OGGF)
+
         return self.__tags
         
-        
-
-    def showOGGTags(self, OGGF):
+    def show_tags(self, OGGF):
         from tinytag import TinyTag
-
         self.__tag = TinyTag.get(OGGF)
 
         print('This track is by {}.'.format(self.__tag.artist))
@@ -320,7 +324,7 @@ class MTinyTag3:
         self.__img_data = self.__tag.get_image()
 
 class MEyed3:
-    """tags[] = getMP3Tagss(f)
+    """tags[] = get_Tagss(f)
         tag = getTag(f, tagname)
         ****   *********
         setAllTags(tags[])
@@ -330,7 +334,7 @@ class MEyed3:
         md3.setTags(f)
     """    
     def __init__(self):
-        print('__init__ Func ...')
+        print('MyEyed3__init__ Func ...')
         self.__csvlist = ''
         self.__SongsData = ''
         self.__dir = ''
@@ -409,7 +413,7 @@ class MEyed3:
         print(f, 'Tag Version Changed to ', ver)
 
 
-    def audioTag(self, audiofiles, tag, searchStr):
+    def MP3_Tag(self, audiofiles, tag, searchStr):
         self.__counter = 0
         for self.__filename in audiofiles:
             self.__audiofile = eyed3.load(self.__filename)
@@ -464,7 +468,7 @@ class MEyed3:
             pprint.pp(self.__row)
             audiofile.tag.save(version=(2, 3, 0))
 
-    def showAudioTags(self, tags):
+    def show_Tags(self, tags):
         #get_logger('MD3LOGGer Start Showing all Tags of Eyed3 Song Object', 'MD3LOGGer', 'DEBUG')
         print(len(tags))
         print('File Name : ', tags[0])
@@ -489,7 +493,7 @@ class MEyed3:
         print('Modified : ', tags[20])
         print('------------------------------------')
 
-    def getMP3Tags(self, f):
+    def get_Tags(self, f):
         #get_logger('MD3LOGGer Start Get all Metadata of MP3 file', 'MD3LOGGer', 'DEBUG')
         print(f)
 
@@ -550,7 +554,6 @@ class MEyed3:
             with open(pf, 'a', newline='') as self.__csvfile:
                 for self.__row in csvlist:
                     writer = csv.DictWriter(self.__csvfile, self.__row)
-                    print(writer)
                     writer.writeheader()
                 print(' -- file Saved.')
             self.__csvfile.close()
@@ -592,7 +595,7 @@ class MEyed3:
         self.__SongsData = []
 
         for self.__f in mp3s:
-            self.__tags = self.getMP3Tags(self.__f)
+            self.__tags = self.get_Tags(self.__f)
             self.__SongsData.append(self.__tags)
         return self.__SongsData
 
@@ -617,7 +620,7 @@ def get_args(args):
     parser = argparse.ArgumentParser(description=description, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-p', '--path', metavar='path', type=str, help='path or directory. Default is user Home Directory')
     parser.add_argument('-c', '--csv', required=False, help='Name of CSV file.Default is md3.csv')
-    #parser.add_argument('-f', '--file', action='showAudioTags', required=False, help='Display Metadata[s] of this file')
+    #parser.add_argument('-f', '--file', action='show_Tags', required=False, help='Display Metadata[s] of this file')
     #parser.add_argument('-t', '--tag', action='showAudioTag', required=False, help='Display This Tag of Music file')
 
     return parser.parse_args()
@@ -639,7 +642,6 @@ def main(argv):
         csv_filename = 'md3.csv'
     if not path:
         home = Path.home()
-        print(home)
         path = str(home) + '/Music/md3/'
 
     pf = ''.join((path, csv_filename))
@@ -659,9 +661,8 @@ def main(argv):
         
     if type(OGGs) is list:
         oggSongsData = []
-        oggSongsData += myOGGs.getOGGsTags(OGGs)
+        oggSongsData += myOGGs.get_tags(OGGs)
 
-    pp.pprint(SongsData)
     mymp3s.saveCSVf(pf, SongsData)
     #fi = ''.join((path,'donya.OGG'))
     #mymp3s.setTagVersion(fi, '2.4.0')
