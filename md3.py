@@ -558,7 +558,7 @@ def main(argv):
     print(answ)
 
     home = Path.home()
-    path = str(home) + '/Music/md3/1/'
+    path = str(home) + '/Music/'
     print("This is your Path : {} ? (y/n) : ".format(path))
     path_is_ok = getch()
     if path_is_ok == 'n':
