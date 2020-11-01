@@ -1,26 +1,24 @@
 #!/usr/bin/env python3
-'''
-## An Audio MetaData Editor Application.
+"""
+## An Audio MetaData Application.
 ## Author : R.Cheshami
 ## Company : Adak Free Way .. http://afw.ir
-'''
-import sys, os, re, glob2
-from os import path
-from pathlib import Path
+"""
+
+import sys, os
+import datetime
 import logging
-import threading
-import datetime, time
-import csv
+from pathlib import Path
 import eyed3
-import pprint
+import glob2
 
 def get_logger(self, msg='',cfname=None, name=None, level=logging.DEBUG, create_file=False):
-    log = logging.getLOGGer(__name__)
-    # get_logger('msg', 'MD3LOGGer', 'WARNING')
+    log = logging.getLogger(__name__)
+    # get_logger('msg', 'MD3Logger', 'WARNING')
     if name is None:
         name = inspect.stack()[1][1].split('.')[0]
     formatter = logging.Formatter(
-        "MD3 %(levelname)s LOGGing Message: %(asctime)s - %(process)d -  - %(threadName)s - %(name)s %(message)s")
+        "MD3 %(levelname)s Logging Message: %(asctime)s - %(process)d -  - %(threadName)s - %(name)s %(message)s")
     
     log = logging.StreamHandler()
     log.setLevel(level)
@@ -34,125 +32,26 @@ def get_logger(self, msg='',cfname=None, name=None, level=logging.DEBUG, create_
     logging.root.addHandler(log)
     return log
 
-class _Getch:
-    """Gets a single character from standard input.  Does not echo to the
-screen."""
-    def __init__(self):
-        try:
-            self.impl = _GetchWindows()
-        except ImportError:
-            self.impl = _GetchUnix()
-
-    def __call__(self): return self.impl()
-
-
-class _GetchUnix:
-    """Fetch and character using the termios module."""
-    def __init__(self):
-        import tty, sys
-        from select import select
-
-    def __call__(self):
-        import sys, tty, termios
-        from select import select
-
+def getch():
+    """Gets a single character from standard input.
+    Does not echo to the screen."""
+    import termios
+    import sys, tty
+    def _getch():
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
-
         try:
-            tty.setraw(sys.stdin.fileno())
-
-            # [ Wait until ready for reading,
-            #   wait until ready for writing
-            #   wait for an "exception condition" ]
-            # The below line times out after 1 second
-            # This can be changed to a floating-point value if necessary
-            [i, o, e] = select([sys.stdin.fileno()], [], [], 1)
-            if i:
-                ch = sys.stdin.read(1)
-            else:
-                ch = None
-
+            tty.setraw(fd)
+            ch = sys.stdin.read(1)
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-
         return ch
+    return _getch()
 
-
-class _GetchWindows:
-    """Fetch a character using the Microsoft Visual C Runtime."""
-    def __init__(self):
-        import msvcrt
-
-    def __call__(self):
-        import msvcrt
-        import time
-
-        # Delay timeout to match UNIX behaviour
-        time.sleep(1)
-
-        # Check if there is a character waiting, otherwise this would block
-        if msvcrt.kbhit():
-            return msvcrt.getch()
-
-        else:
-            return
-
-'''
-    # Check Variables Values & Encode Them and substitute back-ticks
-    if artist:
-        artist.encode()
-        artist = re.sub(u'`', u"'", artist)
-    else:
-        artist = 'Not Listed'
-    if title is not None:
-        title.encode()
-        titlez = re.sub(u'`', u"'", title)
-    else:
-        titlez = 'Not Listed'
-    if audiofile_path is not None:
-        audiofile_path.encode()
-        audiofile_pathz = re.sub(u'`', u"'", audiofile_path)
-    else:
-        audiofile_pathz = ('Not Listed, and you have an the worst luck, '
-                       'because this is/should not possible.')
-        # print them out
-    try:
-        if artist is not None and title is not None and audiofile_path is not None:
-            print('Artist: "{}"'.format(artistz))
-            print('audiofile : "{}"'.format(titlez))
-            print('Path  : "{}"'.format(audiofile_pathz))
-    except Exception as e:
-        raise e
-
-, str(audiofile.tag.comments[0].text), 
-, audiofile.tag.images.get(3, )
-
-'''
 class MMutagen3:
     def __init__(self):
+        print('MMutagen3__init__ Func ...')
         self.__df = ''
-
-    def getchar(self):
-        try:
-            import msvcrt
-            getch = msvcrt.getch
-        except:
-            import sys, tty, termios
-            def _unix_getch():
-                """Get a single character from stdin, Unix version"""
-
-                fd = sys.stdin.fileno()
-                old_settings = termios.tcgetattr(fd)
-                try:
-                    tty.setraw(sys.stdin.fileno())          # Raw read
-                    ch = sys.stdin.read(1)
-                finally:
-                    termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-                return ch
-
-        return _unix_getch
-
 
     def getIMG(self, audiofile):
         IMGS = audiofile.tag.images
@@ -187,7 +86,7 @@ class MMutagen3:
             cover_data = f.read()
         #for filepath in audio_filepaths:
         mf = mutagen.File(audio_filepaths)
-        if (isinstance(mf.tags, mutagen._vorbis.VComment) or isinstance(mf, mutagen.OGG.OGGFileType)):
+        if (isinstance(mf.tags, mutagen._vorbis.VComment) or isinstance(mf, mutagen.ogg.oggFileType)):
             picture = mutagen.flac.Picture()
             picture.data = cover_data
             picture.type = mutagen.id3.PictureType.COVER_FRONT
@@ -220,17 +119,16 @@ class MMutagen3:
             try:
                 metadata = mutagen.File(path)
             except mutagen.mp3.HeaderNotFoundError as e:
-                print("Error reading %s:" % path, e)
+                print(u"Error reading %s:" % path, e)
                 return None
 
         try:
             image = extractFrontCover(metadata)
         except OSError:
-            print('Error extracting image from %s' % path)
+            print(u'Error extracting image from %s' % path)
             return None
 
         return image 
-
 
     def mutgReadTags(self, audiofile):
         from mutagen.easyid3 import EasyID3
@@ -243,12 +141,10 @@ class MMutagen3:
 
             audio = ID3(f)
 
-            print("Artist: %s" % audio['TPE1'].text[0])
-            print("Track: %s" % audio["TIT2"].text[0])
-            #print("Release Year: %s" % audio["TDRC"].text[0])
-            print('-------------------------------------------')
-
-
+            print(u"Artist: %s" % audio['TPE1'].text[0])
+            print(u"Track: %s" % audio["TIT2"].text[0])
+            #print(u"Release Year: %s" % audio["TDRC"].text[0])
+            print(u'-------------------------------------------')
 
     def mutgAddImage(self, f, image):
         from mutagen.mp3 import MP3
@@ -274,34 +170,32 @@ class MMutagen3:
         audio.save()
 
 class MTinyTag3:
-    '''for OGG files and easer get Cover Images'''
-
+    '''for ogg files and easer get Cover Images'''
     def __init__(self):
+        print('MyTinyTag3__init__ Func ...')
         self.__SongsData = []
 
-    def get_tags(self, OGGFs):
+    def get_tags(self, oggFs):
         from tinytag import TinyTag
         self.__tags = []
 
-
-        if type(OGGFs) == list:
-            for self.__OGGF in OGGFs:
-                self.__tags.append(TinyTag.get(self.__OGGF))
-                print(self.__OGGF)
-
+        if type(oggFs) == list:
+            for self.__oggF in oggFs:
+                self.__tags.append(TinyTag.get(self.__oggF))
+                print(self.__oggF)
         else:
-            self.__tags.append(TinyTag.get(self.__OGGF))
-            print(self.__OGGF)
+            self.__tags.append(TinyTag.get(self.__oggF))
+            print(self.__oggF)
 
         return self.__tags
         
-    def show_tags(self, OGGF):
+    def show_tags(self, oggF):
         from tinytag import TinyTag
-        self.__tag = TinyTag.get(OGGF)
+        self.__tag = TinyTag.get(oggF)
 
         print('This track is by {}.'.format(self.__tag.artist))
         print(self.__tag.title)
-        print('It is {:04.2f} seconds long.'.format(self.__tag.duration))
+        print(u'It is {:04.2f} seconds long.'.format(self.__tag.duration))
         print(self.__tag.albumartist)
         print(self.__tag.audio_offset)
         print(self.__tag.bitrate)
@@ -313,28 +207,19 @@ class MTinyTag3:
         print(self.__tag.disc)
         print(self.__tag.disc_total)
         print(self.__tag.duration/60)
-        print('{:02.2f} MiB'.format(self.__tag.filesize/1024/1024))
+        print(u'{:02.2f} MiB'.format(self.__tag.filesize/1024/1024))
         print(self.__tag.genre)
         print(self.__tag.samplerate)
         return self.__tag
-
 
     def getCoverImg(self, f):
         self.__tag = TinyTag.get(f, image=True)
         self.__img_data = self.__tag.get_image()
 
 class MEyed3:
-    """tags[] = get_Tagss(f)
-        tag = getTag(f, tagname)
-        ****   *********
-        setAllTags(tags[])
-        setTag(f, tagname)
-        ***********
-        md3.getTagz(f)
-        md3.setTags(f)
-    """    
+    """ Eyed3 Modules """
+    #eyed3.log.setLevel("ERROR")
     def __init__(self):
-        print('MyEyed3__init__ Func ...')
         self.__csvlist = ''
         self.__SongsData = ''
         self.__dir = ''
@@ -345,8 +230,6 @@ class MEyed3:
         md5 = hashlib.md5()
         md5.update(key)
         return md5.hexdigest()
-
-
 
     def EchoMimeType(self):
         pass
@@ -377,8 +260,10 @@ class MEyed3:
         self.__audiofile = eyed3.core.load(f)
         for self.__img in self.__audiofile.tag.images:
             if self.__img.picture_type == 3:
-                self.__fw = open("{0}{1}-{2}_{3}.jpg".format(path, self.__audiofile.tag.artist, self.__audiofile.tag.album, 'COVER_FRONT'), 'w+b')
-                print("Writing image file: , {0}{1}-{2}_{3}.jpg".format(path, self.__audiofile.tag.artist, self.__audiofile.tag.album, 'COVER_FRONT'))
+                self.__fw = open("{0}{1}-{2}_{3}.jpg".format(path, self.__audiofile.tag.artist,
+                                                self.__audiofile.tag.album, 'COVER_FRONT'), 'w+b')
+                print(u"Writing image file: , {0}{1}-{2}_{3}.jpg".format(path, self.__audiofile.tag.artist,
+                                                                    self.__audiofile.tag.album, 'COVER_FRONT'))
                 self.__fw.write(self.__img.image_data)
 
     def get_album_art2(self):
@@ -423,15 +308,15 @@ class MEyed3:
             print(self.__filename)
             print(self.__seaingenere.findall(searchStr))
             self.__counter += 1
-            print('Found ' + str(self.__counter) + '  Music File with www in Gener or In Coments.')
+            print(u'Found ' + str(self.__counter) + '  Music File with www in Gener or In Coments.')
 
     def saveTagsFromCSV(self, pf):
         from collections import deque
-        #get_logger('MD3LOGGer Start Save Tags in CSV file', 'MD3LOGGer', 'DEBUG')
+        #get_logger('MD3Logger Start Save Tags in CSV file', 'MD3Logger', 'DEBUG')
         if os.path.isfile(pf):
-            self.__csvlist = mycsv.readCSVf(pf)
+            self.__csvlist = self.readCSVf(pf)
         else:
-            print('There is no CSV file : !!!', pf)
+            print(u'There is no CSV file : !!!', pf)
             exit(1)
 
         self.__csvlist.pop(0)
@@ -440,6 +325,8 @@ class MEyed3:
             self.__f = ''.join((self.__row[17], self.__row[0]))
             print(self.__f)
             audiofile = eyed3.core.load(self.__f)
+            if self.__row[1] is not None:
+                audiofile.tag.artist = self.__row[1]
             if self.__row[2] is not None:
                 audiofile.tag.title = self.__row[2]
             if self.__row[3] is not None:
@@ -464,38 +351,36 @@ class MEyed3:
                 audiofile.tag.publisher = self.__row[12]
             if self.__row[13] is not None:
                 audiofile.tag.lyrics.set(self.__row[13])
-            print('Metadata of this file : ')
-            pprint.pp(self.__row)
+            print(u'Metadata of this file : ')
             audiofile.tag.save(version=(2, 3, 0))
 
-    def show_Tags(self, tags):
-        #get_logger('MD3LOGGer Start Showing all Tags of Eyed3 Song Object', 'MD3LOGGer', 'DEBUG')
-        print(len(tags))
-        print('File Name : ', tags[0])
-        print('Artist : ', tags[1])
-        print('Title : ', tags[2])
-        print('Album : ', tags[3])
-        print('Album Artists : ', tags[4])
-        print('Track Number : ', tags[5], ' Totall : ', tags[6])
-        print('Disk Number : ', tags[7], ' All Disks : ', tags[8])
-        print('Date : ', tags[9])
-        print('Gener : ', tags[10])
-        print('Comments : ', tags[11])
-        print('Publisher : ', tags[12])
-        print('Lyrics : ', tags[13])
-        print('ID3 Version : ', tags[14])
-        print('Tag Size : ', tags[15])
-        print('File Size : ', format(tags[16]), '(Byte)')
-        print('Path : ', tags[17])
-        #if tags[18]:
-         #   print('Extention : ', tags[18])
-        print('Created : ', tags[19])
-        print('Modified : ', tags[20])
-        print('------------------------------------')
+    def show_Tags(self, tag):
+        #get_logger('MD3Logger Start Showing all Tags of Eyed3 Song Object', 'MD3Logger', 'DEBUG')
+        print(u'{:12} : {}'.format('File Name', tag[0]))
+        print(u'{:12} : {}'.format('Artist(s)', tag[1]))
+        print(u'{:12} : {}'.format('Title', tag[2]))
+        print(u'{:12} : {}'.format('Album', tag[3]))
+        print(u'{:12} : {}'.format('Album Artist', tag[4]))
+        print(u'{:12} : {} {} : {}'.format('Track Number', tag[5], 'In', tag[6]))
+        print(u'{:12} : {} {} : {}'.format('Disk Number', tag[7], 'All Disks', tag[8]))
+        print(u'{:12} : {}'.format('Date', tag[9]))
+        print(u'{:12} : {}'.format('Gener', tag[10]))
+        print(u'{:12} : {}'.format('Comments', tag[11]))
+        print(u'{:12} : {}'.format('Publisher', tag[12]))
+        print(u'{:12} : {}'.format('Lyrics', tag[13]))
+        print(u'{:12} : {}'.format('ID3 Version', tag[14]))
+        print(u'{:12} : {}'.format('Tag Size', tag[15]))
+        print(u'{:12} : {:04.2f} (Mega Byte)'.format('File Size', float(tag[16])))
+        print(u'{:12} : {}'.format('Path', tag[17]))
+        #print(u'{:12} : {}'.format('Extention', tag[18]))
+        print(u'{:12} : {}'.format('Created', tag[19]))
+        print(u'{:12} : {}'.format('Modified', tag[20]))
+        print(u'------------------------------------')
 
     def get_Tags(self, f):
-        #get_logger('MD3LOGGer Start Get all Metadata of MP3 file', 'MD3LOGGer', 'DEBUG')
-        print(f)
+        import time
+        #get_logger('MD3Logger Start Get all Metadata of MP3 file', 'MD3Logger', 'DEBUG')
+        #print(f)
 
         self.__tags = eyed3.core.load(f)
         self.__path =''.join((os.path.dirname(f), '/'))
@@ -508,6 +393,7 @@ class MEyed3:
             self.__commlang = self.__tags.tag.comments[0].lang
         else:
             self.__comm = ''
+
         if len(self.__tags.tag.lyrics) > 0:
             self.__lyric = self.__tags.tag.lyrics[0].text
             self.__lyriclang = self.__tags.tag.lyrics[0].lang
@@ -520,7 +406,7 @@ class MEyed3:
             self.__tags.tag.track_num[1], self.__tags.tag.disc_num[0], self.__tags.tag.disc_num[1],\
             self.__tags.tag.release_date, self.__tags.tag.genre, self.__comm, self.__tags.tag.publisher,\
             self.__lyric, self.__id3version, self.__tags.tag.header.tag_size,\
-            os.path.getsize(f), os.path.dirname(f) + "/", os.path.splitext(f)[1],\
+            os.path.getsize(f)/1024/1024, os.path.dirname(f) + "/", os.path.splitext(f)[1],\
             self.__mtime, self.__ctime
             ]
 
@@ -528,53 +414,54 @@ class MEyed3:
         return self.__tags
 
     def makeCSVf(self, pf):
-        print('Create New Music MetaData File in ',pf)
+        import csv
+        print(u'Creating New Music MetaData File ',pf)
         try:
             with open(pf, 'w', newline='') as self.__csvfile:
                 self.__fieldnames = ['File Name','Artist', 'Title', 'Album', 'AlbumArtists', 'Track Number',\
                     'Totall Tracks', 'Disk Number', 'All Disks','Date', 'Gener', 'Comments',\
-                    'Publisher','Lyrics', 'ID3 Version', 'Tag Size', 'Size Byte', 'Path',\
+                    'Publisher','Lyrics', 'ID3 Version', 'Tag Size', 'Size (MiB)', 'Path',\
                     'File Extention', 'Last Access',\
                     'Last Modify', 'coverArtFileName']
                 writer = csv.DictWriter(self.__csvfile, fieldnames=self.__fieldnames)
                 writer.writeheader()
             self.__csvfile.close()
         except IOError:
-            print('Error: File {} Was Not Created.', format(pf))
+            print(u'Error: File {} Was Not Created.'.format(pf))
         else:
-            print('File {} was created. and Header of CSV was added.', format(pf))
+            print(u'File {} was created. and Header of CSV was added.'.format(pf))
 
         return True
 
     def saveCSVf(self, pf, csvlist):
-        #get_logger('MD3LOGGer Start Save Tags in CSV file', 'MD3LOGGer', 'DEBUG')
+        import csv
+        #get_logger('MD3Logger Start Save Tags in CSV file', 'MD3Logger', 'DEBUG')
         try:
-            if os.path.isfile(pf):
+            if not os.path.exists(pf):
                 self.makeCSVf(pf)
             with open(pf, 'a', newline='') as self.__csvfile:
                 for self.__row in csvlist:
                     writer = csv.DictWriter(self.__csvfile, self.__row)
                     writer.writeheader()
-                print(' -- file Saved.')
+                print(u'The Tags Was writed to CSV file.')
             self.__csvfile.close()
         except IOError:
-            print('File was not find.')
+            print(u'File was not find.')
         else:
-            print('The Tags Was writed to CSV file.')
+            print(u' -- CSV file Saved.')
         return True
 
     def correctPath(self, csvlist):
-        #get_logger('MD3LOGGer Start fix path of CSV file', 'MD3LOGGer', 'DEBUG')
+        #get_logger('MD3Logger Start fix path of CSV file', 'MD3Logger', 'DEBUG')
         for self.__row in csvlist:
             self.__row[16] = ''.join((self.__row[16], '/'))
         return csvlist
 
     def readCSVf(self, pf):
-        #get_logger('MD3LOGGer Start Read CSV file', 'MD3LOGGer', 'DEBUG')
-        print(pf)
+        import csv
+        #get_logger('MD3Logger Start Read CSV file', 'MD3Logger', 'DEBUG')
         with open(pf) as self.__csvfile:
             self.__csvlist = csv.reader(self.__csvfile)
-            print(self.__csvlist)
             return list(self.__csvlist)
 
     def setAudioTags(self, f, tagName, tagText):
@@ -585,13 +472,13 @@ class MEyed3:
         self.__audiofile.tag.artist = ''
 
     def removeNone(self, tags):
-        #get_logger('MD3LOGGer Start Remove None Tags', 'MD3LOGGer', 'DEBUG')
+        #get_logger('MD3Logger Start Remove None Tags', 'MD3Logger', 'DEBUG')
         tags = list(map(str, tags))
         tags = [ self.__tag.replace('None', '') for self.__tag in tags ]
         return tags
 
     def getMP3sTags(self, mp3s):
-        #get_logger('MD3LOGGer Start Split MP3 files', 'MD3LOGGer', 'DEBUG')
+        #get_logger('MD3Logger Start Split MP3 files', 'MD3Logger', 'DEBUG')
         self.__SongsData = []
 
         for self.__f in mp3s:
@@ -600,81 +487,159 @@ class MEyed3:
         return self.__SongsData
 
     def splitCSVlist(self, csvlist):
-        #get_logger('MD3LOGGer Start Split CSV file', 'MD3LOGGer', 'DEBUG')
+        #get_logger('MD3Logger Start Split CSV file', 'MD3Logger', 'DEBUG')
         self.__mp3s = []
         for self.__row in csvlist:
-            self.__fp = ''.join((self.__row[16], self.__row[0]))
-            print(self.__fp)
-            self.__mp3s.append(fp)
+            if self.__row[17] != 'Path':
+                self.__fp = ''.join((self.__row[17], self.__row[0]))
+                print('Read Tags Of {} File From CSV'.format(self.__fp))
+                self.__mp3s.append(self.__fp)
         return self.__mp3s
 
 def get_args(args):
     import argparse
 
     description = (
-                    "Get and Set your Music MetaData [with CSV file].\n"
-                    "You set a path with an argumant -d, then application\n"
-                    "create a CSV file, with all MetaData Tags of all Music files\n"
+                    "Get and Set your Music MetaData in [CSV file].\n"
+                    "You set a path with an argumant -p, then application\n"
+                    "create a CSV file, with all MetaData Tags of all your Musics\n"
                     "you set for application [recursivly]."
     )
-    parser = argparse.ArgumentParser(description=description, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-p', '--path', metavar='path', type=str, help='path or directory. Default is user Home Directory')
-    parser.add_argument('-c', '--csv', required=False, help='Name of CSV file.Default is md3.csv')
-    #parser.add_argument('-f', '--file', action='show_Tags', required=False, help='Display Metadata[s] of this file')
-    #parser.add_argument('-t', '--tag', action='showAudioTag', required=False, help='Display This Tag of Music file')
+    parser = argparse.ArgumentParser(prog='md3.sh', description=description, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--path', '-p', required=False, help='Music path or directory. Default is user Home Music Directory')
+    parser.add_argument('--csvin', '-i', required=False, help='Name of Music Metadata CSV file to Write Musics Metadata from that file')
+    parser.add_argument('--csvout', '-o', required=False, help='Name of Music Metadata CSV file.Default is md3.csv')
+    parser.add_argument('--mfile', '-m', required=False, help='Display Metadata[s] of this file')
+    parser.add_argument('--tag', '-t', required=False, help='Display This Tag of Music file')
 
     return parser.parse_args()
 
 def main(argv):
-    eyed3.log.setLevel("ERROR")
-    print('Start Time:', datetime.datetime.now(), '\n\n WellCome To MD3.')
+    clear = lambda: os.system('clear')
+    clear()
+    print(u'Start Time:', datetime.datetime.now())
+    start_time = datetime.datetime.now()
 
-    pp = pprint.PrettyPrinter(indent=4, sort_dicts=True)
+    print(u'\n\t\u2554', end='')
+    for i in range(25):
+        print(u'\u2550', end='')
+    print(u'\u2557\n\t\u2551', u' ## WellCome To MD3 ## ', u'\u2551\n\t\u255a', end='')
+    for i in range(25):
+        print(u'\u2550', end='')
+    print(u'\u255d\n')
 
     args = get_args(argv)
-    
-    path = args.path
-    csv_filename = args.csv
-    #music_file = args.file
-    #tag_name = args.tag
 
-    if not csv_filename:
-        csv_filename = 'md3.csv'
-    if not path:
+    if args.mfile:
+        argMP3 = args.mfile
+    else:
+        argMP3 = 'donya.mp3'
+
+    if args.path:
+        path = args.path
+    else:
         home = Path.home()
         path = str(home) + '/Music/md3/'
 
-    pf = ''.join((path, csv_filename))
+    mp3 = ''
+    mp3SongsData = []
+    oggs = ''
+    oggSongsData = []
 
-    mymp3s = MEyed3()
-    myOGGs = MTinyTag3()
+    print("What Do You Want To Do ?")
+    print("\t1 - Get Tags of a Music")
+    print("\t2 - Get Tags of a path Musics")
+    print("\t3 - Get Tags of all path Musics Recursive")
+    print("\t4 - Create CSV file")
+    print("\t5 - Create CSV file")
+    print("\t6 - Save Musics Tag from a CSV file")
+    
+    answ = getch()
+    print(answ)
 
-    try:
-        if os.path.isfile(pf):
-            mp3s = glob2.glob(path + '**/*.mp3')
-            OGGs = glob2.glob(path + '**/*.ogg')
-    except Exception:
-        print('{} Not find.', format(pf))
-
-    if type(mp3s) is list:
-        SongsData = mymp3s.getMP3sTags(mp3s)
+    home = Path.home()
+    path = str(home) + '/Music/md3/1/'
+    print("This is your Path : {} ? (y/n) : ".format(path))
+    path_is_ok = getch()
+    if path_is_ok == 'n':
+        path = input("Please Enter Your Path : ")
         
-    if type(OGGs) is list:
-        oggSongsData = []
-        oggSongsData += myOGGs.get_tags(OGGs)
+    cCSV = ''
+    pf = ''
 
-    mymp3s.saveCSVf(pf, SongsData)
-    #fi = ''.join((path,'donya.OGG'))
-    #mymp3s.setTagVersion(fi, '2.4.0')
+    if answ == '1':
+        print("Tags of {} file? (y/n) : ".format(argMP3))
+        mp3tag_answ = getch()
+        if mp3tag_answ == 'n':
+            argMP3 = input("Enter Your Music File Name : ")
 
-    #csvlist = mymp3s.readCSVf(pf)
-    #csvlist = mymp3s.correctPath(csvlist)
-    #mp3s = mymp3s.splitCSVlist(csvlist)
-    #mymp3s.saveTagsFromCSV(pf)
+        myMP3s = MEyed3()
+        argMP3 = ''.join((path, argMP3))
+        mp3SongData = myMP3s.get_Tags(argMP3)
+        myMP3s.show_Tags(mp3SongData)
 
-    #MMD3.embed_album_art('/home/ro/Music/md3/Ball.jpg', '/home/ro/Music/md3/donya.mp3')
-    #MD3.get_album_art('/home/ro/Music/md3/','/home/ro/Music/md3/donya.OGG')
-    print('Bye.\n\nEnd Time: ', datetime.datetime.now())
+    elif answ == '2' or answ == '3':
+        mp3s = ''
+        try:
+            if os.path.exists(path):
+                if answ == '2':
+                    mp3s = glob2.glob(path + '*.mp3')
+                    oggs = glob2.glob(path + '*.ogg')
+                    print(mp3s)
+                elif answ == '3':
+                    mp3s = glob2.glob(path + '**/*.mp3')
+                    oggs = glob2.glob(path + '**/*.ogg')
+                    print(mp3s)
+        except Exception:
+            print(u'{} Not find.'.format(pf))
+
+        SongsData = ''
+        if type(mp3s) is list:
+            myMP3s = MEyed3()
+            SongsData = myMP3s.getMP3sTags(mp3s)
+            for SongData in SongsData:
+                myMP3s.show_Tags(SongData)
+
+    elif answ == '4' or answ == '5':
+        csv_filename = 'md3.csv'
+        print("The CSV File Name : {} ? (y/n) : ".format(csv_filename))
+        cCSV = getch()
+        if cCSV == 'n':
+            csv_filename = input("Enter Your CSV File Name : ")
+
+        pf = ''.join((path, csv_filename))
+        myMP3s = MEyed3()
+        try:
+            if os.path.isdir(path):
+                if answ == '4':
+                    mp3s = glob2.glob(path + '*.mp3')
+                    oggs = glob2.glob(path + '*.ogg')
+                elif answ == '5':
+                    mp3s = glob2.glob(path + '**/*.mp3')
+                    oggs = glob2.glob(path + '**/*.ogg')
+        except Exception:
+            print(u'{} Not find.'.format(pf))
+
+        SongsData = myMP3s.getMP3sTags(mp3s)
+        myMP3s.saveCSVf(pf, SongsData)
+
+    elif answ == '6':
+        csv_filename = 'md3.csv'
+        print("The CSV File Name : {} ? (y/n) : ".format(csv_filename))
+        cCSV = getch()
+        if cCSV == 'n':
+            csv_filename = input("Enter Your CSV File Name : ")
+
+        pf = ''.join((path, csv_filename))
+        myMP3s = MEyed3()
+
+        csvlist = myMP3s.readCSVf(pf)
+        csvlist = myMP3s.correctPath(csvlist)
+        mp3s = myMP3s.splitCSVlist(csvlist)
+        myMP3s.saveTagsFromCSV(pf)
+        
+    print(u'Bye.\n\nEnd Time: {}'.format(datetime.datetime.now()))
+    print(datetime.datetime.now()-start_time)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
