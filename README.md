@@ -15,15 +15,13 @@ It will be very good if anybody can help me to develop and extend this applicati
 
 ## Installation: in Python3
 
-install python3
-
-install some python modules:
+install python3 and some python modules:
 
 in Debian base :
 
-	$ sudo apt-get install python3
+	$ sudo apt-get install python[3]
 	
-	$ pip install pathlib CSV eyed3 pprint glob2 re
+	$ pip[3] install pathlib CSV eyed3 pprint glob2 re
 	
 in Redhat base :
 
