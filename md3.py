@@ -382,6 +382,8 @@ class MEyed3:
         #get_logger('MD3Logger Start Get all Metadata of MP3 file', 'MD3Logger', 'DEBUG')
         #print(f)
 
+        print(f)
+
         self.__tags = eyed3.core.load(f)
         self.__path =''.join((os.path.dirname(f), '/'))
         self.__mtime = time.strftime("%Y/%m/%d %a - %H:%M:%S", time.localtime(os.path.getmtime(f)))
@@ -496,150 +498,227 @@ class MEyed3:
                 self.__mp3s.append(self.__fp)
         return self.__mp3s
 
-def get_args(args):
-    import argparse
+class MD3(object):
+    """docstring for MD3"""
+    def __init__(self, *args):
+        super(MD3, self).__init__()
 
-    description = (
-                    "Get and Set your Music MetaData in [CSV file].\n"
-                    "You set a path with an argumant -p, then application\n"
-                    "create a CSV file, with all MetaData Tags of all your Musics\n"
-                    "you set for application [recursivly]."
-    )
-    parser = argparse.ArgumentParser(prog='md3.sh', description=description, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--path', '-p', required=False, help='Music path or directory. Default is user Home Music Directory')
-    parser.add_argument('--csvin', '-i', required=False, help='Name of Music Metadata CSV file to Write Musics Metadata from that file')
-    parser.add_argument('--csvout', '-o', required=False, help='Name of Music Metadata CSV file.Default is md3.csv')
-    parser.add_argument('--mfile', '-m', required=False, help='Display Metadata[s] of this file')
-    parser.add_argument('--tag', '-t', required=False, help='Display This Tag of Music file')
+        print(type(args))
+        self.args = list()
+        self.args = self.get_args(args)
 
-    return parser.parse_args()
+        clear = lambda: os.system('clear')
+        clear()
+        print(u'Start Time:', datetime.datetime.now())
+        self.start_time = datetime.datetime.now()
 
-def main(argv):
-    clear = lambda: os.system('clear')
-    clear()
-    print(u'Start Time:', datetime.datetime.now())
-    start_time = datetime.datetime.now()
+        if self.args.mfile:
+            self.argMP3 = self.args.mfile
+        else:
+            self.argMP3 = 'donya.mp3'
 
-    print(u'\n\t\u2554', end='')
-    for i in range(25):
-        print(u'\u2550', end='')
-    print(u'\u2557\n\t\u2551', u' ## WellCome To MD3 ## ', u'\u2551\n\t\u255a', end='')
-    for i in range(25):
-        print(u'\u2550', end='')
-    print(u'\u255d\n')
+        if self.args.path:
+            self.path = self.args.path
+        else:
+            self.home = Path.home()
+            self.path = str(self.home) + '/Music/md3/'
 
-    args = get_args(argv)
+        self.mp3 = ''
+        self.mp3SongsData = []
+        self.oggs = ''
+        self.oggSongsData = []
 
-    if args.mfile:
-        argMP3 = args.mfile
-    else:
-        argMP3 = 'donya.mp3'
+        self.myMP3s = MEyed3()
 
-    if args.path:
-        path = args.path
-    else:
-        home = Path.home()
-        path = str(home) + '/Music/md3/'
+        self.main()
 
-    mp3 = ''
-    mp3SongsData = []
-    oggs = ''
-    oggSongsData = []
+    def get_args(self, args):
+        import argparse
 
-    print("What Do You Want To Do ?")
-    print("\t1 - Get Tags of a Music")
-    print("\t2 - Get Tags of a path Musics")
-    print("\t3 - Get Tags of all path Musics Recursive")
-    print("\t4 - Create CSV file")
-    print("\t5 - Create CSV file")
-    print("\t6 - Save Musics Tag from a CSV file")
-    
-    answ = getch()
-    print(answ)
+        description = (
+                        "Get and Set your Music MetaData in [CSV file].\n"
+                        "You set a path with an argumant -p, then application\n"
+                        "create a CSV file, with all MetaData Tags of all your Musics\n"
+                        "you set for application [recursivly]."
+        )
+        parser = argparse.ArgumentParser(prog='md3.sh', description=description, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        parser.add_argument('--path', '-p', required=False, help='Music path or directory. Default is user Home Music Directory')
+        parser.add_argument('--csvin', '-i', required=False, help='Name of Music Metadata CSV file to Write Musics Metadata from that file')
+        parser.add_argument('--csvout', '-o', required=False, help='Name of Music Metadata CSV file.Default is md3.csv')
+        parser.add_argument('--mfile', '-m', required=False, help='Display Metadata[s] of this file')
+        parser.add_argument('--tag', '-t', required=False, help='Display This Tag of Music file')
 
-    home = Path.home()
-    path = str(home) + '/Music/'
-    print("This is your Path : {} ? (y/n) : ".format(path))
-    path_is_ok = getch()
-    if path_is_ok == 'n':
-        path = input("Please Enter Your Path : ")
-        
-    cCSV = ''
-    pf = ''
+        return parser.parse_args()
 
-    if answ == '1':
-        print("Tags of {} file? (y/n) : ".format(argMP3))
-        mp3tag_answ = getch()
-        if mp3tag_answ == 'n':
-            argMP3 = input("Enter Your Music File Name : ")
-
-        myMP3s = MEyed3()
-        argMP3 = ''.join((path, argMP3))
-        mp3SongData = myMP3s.get_Tags(argMP3)
-        myMP3s.show_Tags(mp3SongData)
-
-    elif answ == '2' or answ == '3':
-        mp3s = ''
+    def get_mp3s_files(self, path, recursive=False):
         try:
-            if os.path.exists(path):
-                if answ == '2':
-                    mp3s = glob2.glob(path + '*.mp3')
-                    oggs = glob2.glob(path + '*.ogg')
+            if os.path.exists(self.path):
+                if recursive == False:
+                    self.mp3s = glob2.glob(self.path + '*.mp3')
                     print(mp3s)
-                elif answ == '3':
-                    mp3s = glob2.glob(path + '**/*.mp3')
-                    oggs = glob2.glob(path + '**/*.ogg')
+                elif recursive == True:
+                    self.mp3s = glob2.glob(self.path + '**/*.mp3')
                     print(mp3s)
         except Exception:
-            print(u'{} Not find.'.format(pf))
+            print(u'{} Not find.'.format(self.pf))
+        return self.mp3s
 
-        SongsData = ''
-        if type(mp3s) is list:
-            myMP3s = MEyed3()
+    def get_oggs_files(self, path, recursive=False):
+        try:
+            if os.path.exists(self.path):
+                if self.answ == '2':
+                    self.oggs = glob2.glob(self.path + '*.ogg')
+                    print(mp3s)
+                elif self.answ == '3':
+                    self.oggs = glob2.glob(self.path + '**/*.ogg')
+                    print(mp3s)
+        except Exception:
+            print(u'{} Not find.'.format(self.pf))
+        return self.oggs
+
+    def is_answer_corect(self, answer):
+        pass
+
+    def is_file_exist(self, f):
+        """
+        try:
+           answer = int(raw_input('Enter a value (1 - 4) >. ')) 
+        except ValueError:
+            print('Invalid input. Enter a value between 1 -4 .')
+            continue
+
+        if not answer in range(1, 5):
+            print('Invalid input. Enter a value between 1 - 4.')
+            continue
+
+        return answer
+        """
+        pass
+
+    def is_dir_exist(self, dir):
+        pass
+
+
+        
+    def get_path(self, path):
+        print("Your Default(Entered) path is {} ? (y/n) : ".format(path))
+        self.path_is_ok = getch()
+        if self.path_is_ok == 'n':
+            self.path = input("Please Enter Your Path : ")
+        return self.path
+
+    def menu(self):
+        menu = {"1":(" - Get Tags of a Music",my_add_fn),
+                "2":(" - Get Tags of a path Musics",my_quit_fn)
+               }
+        for key in sorted(menu.keys()):
+             print(key+":" + menu[key][0])
+
+        ans = raw_input("Make A Choice")
+        menu.get(ans,[None,invalid])[1]()
+
+    def quite(self):
+        print(u'Bye.\n\nEnd Time: {}'.format(datetime.datetime.now()))
+        print(datetime.datetime.now()-self.start_time)
+
+    def main(self, *args):
+        
+
+        print(u'\n\t\u2554', end='')
+        for i in range(25):
+            print(u'\u2550', end='')
+        print(u'\u2557\n\t\u2551', u' ## WellCome To MD3 ## ', u'\u2551\n\t\u255a', end='')
+        for i in range(25):
+            print(u'\u2550', end='')
+        print(u'\u255d\n')
+
+        
+
+        print("What Do You Want To Do ?")
+        print("\t1 - Get Tags of a Music")
+        print("\t2 - Get Tags of a path Musics")
+        print("\t3 - Get Tags of a path Musics Recursive")
+        print("\t4 - Create CSV file")
+        print("\t5 - Create CSV file for this path Recursive")
+        print("\t6 - Save Musics Tag from a CSV file")
+        print("\t7 - Quite")
+        
+        self.answ = getch()
+        print(self.answ)
+
+        self.home = Path.home()
+        self.path = str(self.home) + '/Music/'
+        self.cCSV = ''
+        self.pf = ''
+
+        self.path = self.get_path(self.path)
+
+        if self.answ == '1':
+            print("Tags of {} file? (y/n) : ".format(self.argMP3))
+
+            self.mp3tag_answ = getch()
+            if self.mp3tag_answ == 'n':
+                self.argMP3 = input("Enter Your Music File Name : ")
+
+            self.argMP3 = ''.join((self.path, self.argMP3))
+            self.mp3SongData = self.myMP3s.get_Tags(self.argMP3)
+            self.myMP3s.show_Tags(self.mp3SongData)
+
+        elif self.answ == '2' or self.answ == '3':
+
+            self.SongsData = ''
+            if type(self.mp3s) is list:
+                
+                self.SongsData = self.myMP3s.getMP3sTags(self.mp3s)
+                for self.SongData in self.SongsData:
+                    self.myMP3s.show_Tags(self.SongData)
+
+        elif self.answ == '4' or self.answ == '5':
+            self.csv_filename = 'md3.csv'
+            print("The CSV File Name : {} ? (y/n) : ".format(self.csv_filename))
+            self.cCSV = getch()
+            if self.cCSV == 'n':
+                self.csv_filename = input("Enter Your CSV File Name : ")
+
+            self.pf = ''.join((self.path, self.csv_filename))
+            try:
+                if os.path.isdir(self.path):
+                    if answ == '4':
+                        mp3s = glob2.glob(self.path + '*.mp3')
+                        oggs = glob2.glob(self.path + '*.ogg')
+                    elif answ == '5':
+                        mp3s = glob2.glob(self.path + '**/*.mp3')
+                        oggs = glob2.glob(self.path + '**/*.ogg')
+            except Exception:
+                print(u'{} Not find.'.format(pf))
+
             SongsData = myMP3s.getMP3sTags(mp3s)
-            for SongData in SongsData:
-                myMP3s.show_Tags(SongData)
+            myMP3s.saveCSVf(pf, SongsData)
 
-    elif answ == '4' or answ == '5':
-        csv_filename = 'md3.csv'
-        print("The CSV File Name : {} ? (y/n) : ".format(csv_filename))
-        cCSV = getch()
-        if cCSV == 'n':
-            csv_filename = input("Enter Your CSV File Name : ")
+        elif self.answ == '6':
+            self.csv_filename = 'md3.csv'
+            print("The CSV File Name : {} ? (y/n) : ".format(csv_filename))
+            self.cCSV = getch()
+            if self.cCSV == 'n':
+                self.csv_filename = input("Enter Your CSV File Name : ")
 
-        pf = ''.join((path, csv_filename))
-        myMP3s = MEyed3()
-        try:
-            if os.path.isdir(path):
-                if answ == '4':
-                    mp3s = glob2.glob(path + '*.mp3')
-                    oggs = glob2.glob(path + '*.ogg')
-                elif answ == '5':
-                    mp3s = glob2.glob(path + '**/*.mp3')
-                    oggs = glob2.glob(path + '**/*.ogg')
-        except Exception:
-            print(u'{} Not find.'.format(pf))
+            self.pf = ''.join((self.path, self.csv_filename))
+            myMP3s = MEyed3()
 
-        SongsData = myMP3s.getMP3sTags(mp3s)
-        myMP3s.saveCSVf(pf, SongsData)
+            self.csvlist = self.myMP3s.readCSVf(self.pf)
+            self.csvlist = self.myMP3s.correctPath(self.csvlist)
+            self.mp3s = self.myMP3s.splitCSVlist(self.csvlist)
+            self.myMP3s.saveTagsFromCSV(self.pf)
 
-    elif answ == '6':
-        csv_filename = 'md3.csv'
-        print("The CSV File Name : {} ? (y/n) : ".format(csv_filename))
-        cCSV = getch()
-        if cCSV == 'n':
-            csv_filename = input("Enter Your CSV File Name : ")
-
-        pf = ''.join((path, csv_filename))
-        myMP3s = MEyed3()
-
-        csvlist = myMP3s.readCSVf(pf)
-        csvlist = myMP3s.correctPath(csvlist)
-        mp3s = myMP3s.splitCSVlist(csvlist)
-        myMP3s.saveTagsFromCSV(pf)
+        else:
+            self.quite()
+class MD3MP3(object):
+    """docstring for MD3MP3"""
+    def __init__(self, arg):
+        super(MD3, self).__init__()
+        self.arg = arg
         
-    print(u'Bye.\n\nEnd Time: {}'.format(datetime.datetime.now()))
-    print(datetime.datetime.now()-start_time)
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv))
+    mymd3 = MD3(sys.argv)
+    sys.exit()
