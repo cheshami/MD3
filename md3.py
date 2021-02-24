@@ -22,9 +22,6 @@ class MD3(object):
         clear = lambda: os.system('clear')
         clear()
 
-        print(type(args))
-        print(args[0])
-
         self.start_time = start_time
         print(u'Start Time:', start_time)
 
@@ -49,7 +46,6 @@ class MD3(object):
         self.recursive = False
 
         self.myMP3s = meyed3
-        print(self.myMP3s)
 
         self.wellcome()
 
@@ -131,10 +127,10 @@ class MD3(object):
     def get_oggs_files(self):
         try:
             if os.path.exists(self.path):
-                if self.answ == '2':
+                if self.answer == '2':
                     self.oggs = glob2.glob(self.path + '*.ogg')
                     print(mp3s)
-                elif self.answ == '3':
+                elif self.answer == '3':
                     self.oggs = glob2.glob(self.path + '**/*.ogg')
                     print(mp3s)
         except Exception:
@@ -142,27 +138,22 @@ class MD3(object):
         return self.oggs
 
     def is_answer_corect(self):
-        """
         try:
-            answer = int(raw_input('Enter a value (1 - 4) >. '))
+            self.answer = int(raw_input('Enter a value (1..6). '))
         except ValueError:
-            print('Invalid input. Enter a value between 1 -4 .')
-            continue
+            print('Invalid input. Enter a value from 1 till 6.')
 
-        if not answer in range(1, 5):
+        if not self.answer in range(1, 6):
             print('Invalid input. Enter a value between 1 - 4.')
-            continue
 
-        return answer
-        """
-        pass
+        return self.answer
 
     def check_path(self):
         while True:
             try:
                 if not(os.path.exists(self.path)):
                     print("Enter Valid Path or Filename : ", end="\r")
-                    path = input('')
+                    self.path = input('')
                 else:
                     break;
             except IOError:
@@ -181,8 +172,8 @@ class MD3(object):
     """
 
     def quit(self):
-        print(u'Bye.\n\nEnd Time: {}'.format(datetime.datetime.now()))
-        print(datetime.datetime.now()-self.start_time)
+        print(u'\nBye.\n\nEnd Time: {}'.format(datetime.datetime.now()))
+        print(u'Totlal Time in This Program: {}'.format(datetime.datetime.now()-self.start_time))
         exit(0)
 
     def main(self, *args):
@@ -201,10 +192,10 @@ class MD3(object):
             \t6 - Save Musics Tag from a CSV file\n \
             \t7 - Quite")
 
-        self.answ = self.getch()
-        print(self.answ)
+        self.answer = self.getch()
+        print(self.answer)
 
-        if self.answ == '1':
+        if self.answer == '1':
             print("Tags of {} file? (y/n) : ".format(self.argMP3))
 
             self.mp3tag_answ = self.getch()
@@ -217,21 +208,21 @@ class MD3(object):
             self.mp3SongData = meyed3.get_Tags(self.argMP3)
             meyed3.show_Tags_Column(self.mp3SongData)
 
-        elif self.answ == '2' or self.answ == '3':
+        elif self.answer == '2' or self.answer == '3':
             self.SongsData = ''
-            if self.answ == '3':
+            if self.answer == '3':
                 self.recursive = True
             self.mp3s = self.get_mp3s_files()
             self.SongsData = meyed3.getMP3sTags(self.mp3s)
             for self.SongData in self.SongsData:
                 ## Column Theme
-                meyed3.show_Tags_Column(self.SongData)
+                #meyed3.show_Tags_Column(self.SongData)
                 ## Row Theme
-                #meyed3.show_Tags_Row(self.SongData)
+                meyed3.show_Tags_Row(self.SongData)
                 
 
-        elif self.answ == '4' or self.answ == '5':
-            if self.answ == '5':
+        elif self.answer == '4' or self.answer == '5':
+            if self.answer == '5':
                 self.recursive = True
             self.csv_filename = 'md3.csv'
             print("The CSV File Name : {} ? (y/n) : ".format(self.csv_filename))
@@ -243,7 +234,7 @@ class MD3(object):
             self.SongsData = meyed3.getMP3sTags(self.mp3s)
             meyed3.saveCSVf(self.pf, self.SongsData)
 
-        elif self.answ == '6':
+        elif self.answer == '6':
             self.csv_filename = 'md3.csv'
             print("The CSV File Name : {} ? (y/n) : ".format(self.csv_filename))
             self.CSV_answ = self.getch()
@@ -251,12 +242,14 @@ class MD3(object):
                 self.csv_filename = input("Enter Your CSV File Name : ")
             self.pf = ''.join((self.path, self.csv_filename))
             self.csvlist = meyed3.readCSVf(self.pf)
+            print('Tags of all mp3 in {} was Read.'.format(self.path))
             self.csvlist = meyed3.correctPath(self.csvlist)
             self.mp3s = meyed3.splitCSVlist(self.csvlist)
             meyed3.saveTagsFromCSV(self.pf)
 
-        elif self.answ == '7' or 'q':
+        elif self.answer == '7' or 'q':
             self.quit()
+        self.quit()
 
 if __name__ == '__main__':
     start_time = datetime.datetime.now()

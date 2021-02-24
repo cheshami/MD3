@@ -1,4 +1,6 @@
-import eyed3, enum
+#!/usr/bin/env python3
+
+import eyed3, enum,md3
 
 class SIZE_UNIT(enum.Enum):
     BYTES = 1
@@ -114,50 +116,6 @@ def MP3_Tag(self, audiofiles, tag, searchStr):
         __counter += 1
         print(u'Found '+str(__counter)+' Music File with www in Gener or In Coments.')
 
-def saveTagsFromCSV(self, pf):
-    from collections import deque
-    #get_logger('MD3Logger Start Save Tags in CSV file', 'MD3Logger', 'DEBUG')
-    if os.path.isfile(pf):
-        __csvlist = readCSVf(pf)
-    else:
-        print(u'There is no CSV file : !!!', pf)
-        exit(1)
-
-    __csvlist.pop(0)
-    ## .popleft()
-    for __row in __csvlist:
-        __f = ''.join((__row[17], __row[0]))
-        print(__f)
-        audiofile = eyed3.core.load(__f)
-        if __row[1] is not None:
-            audiofile.tag.artist = __row[1]
-        if __row[2] is not None:
-            audiofile.tag.title = __row[2]
-        if __row[3] is not None:
-            audiofile.tag.album = __row[3]
-        if __row[4] is not None:
-            audiofile.tag.album_artist = __row[4]
-        if __row[5] != '':
-            audiofile.tag.track_num = (int(__row[5]))
-            if __row[5] and __row[6] != '':
-                audiofile.tag.track_num = (int(__row[5]), int(__row[6]))
-        if __row[7] != '':
-            audiofile.tag.disc_num = (int(__row[7]))
-            if __row[7] and __row[8] != '':
-                audiofile.tag.disc_num = (int(__row[7]), int(__row(8)))
-        if __row[9] is not None:
-            audiofile.tag.release_date = __row[9]
-        if __row[10] is not None:
-            audiofile.tag.genre = __row[10]
-        if __row[11] is not None:
-            audiofile.tag.comments.set(__row[11])
-        if __row[12] is not None:
-            audiofile.tag.publisher = __row[12]
-        if __row[13] is not None:
-            audiofile.tag.lyrics.set(__row[13])
-        print(u'Metadata of this file : ')
-        audiofile.tag.save(version=(2, 3, 0))
-
 def show_Tags_Column(tag):
     #get_logger('MD3Logger Start Showing all Tags of Eyed3 Song Object', 'MD3Logger', 'DEBUG')
     print(u'{:12} : {}'.format('File Name', tag[0]))
@@ -176,50 +134,52 @@ def show_Tags_Column(tag):
     print(u'{:12} : {}'.format('Tag Size', tag[15]))
     print(u'{:12} : {} MiB'.format('File Size', tag[16]))
     print(u'{:12} : {}'.format('Path', tag[17]))
-    #print(u'{:12} : {}'.format('Extention', tag[18]))
+    print(u'{:12} : {}'.format('Extention', tag[18]))
     print(u'{:12} : {}'.format('Created', tag[19]))
     print(u'{:12} : {}'.format('Modified', tag[20]))
     print(u'------------------------------------')
 
 def show_Tags_Row(tag):
     #get_logger('MD3Logger Start Showing all Tags of Eyed3 Song Object', 'MD3Logger', 'DEBUG')
-    print(u'{:25} | {:25} | {:25} | {:25} | {:25}'.format(
-        'Artist(s)', 'Title', 'Album', 'Album Artist', 'Date'))
-    print(u'{:25} | {:25} | {:25} | {:25} | {:25}'.format(
-        tag[1], tag[2], tag[3], tag[4], tag[9]))
-    """
-    print(u'{:12} : {:04.2f} MiB'.format( float(tag[16])))
-    print(u'{:12} : {}'.format('Path', tag[17]))
-    #print(u'{:12} : {}'.format('Extention', tag[18]))
-    """
-
-    print(u'------------------------------------')
+    try:
+        print(tag[0])
+        print(u'{:25} | {:25} | {:25} | {:25} | {:25}'.format(
+            'Artist(s)', 'Title', 'Album', 'Album Artist', 'Date'))
+        print(u'{:25} | {:25} | {:25} | {:25} | {:25}'.format(
+            tag[1], tag[2], tag[3], tag[4], tag[9]))
+        print(u'------------------------------------')
+    except UnicodeEncodeError as unerr:
+        print(u'Unicode Error\n*\n*\n*\n*\n*\n*\n*\n*')
+        return(False)
+    except IndexError as inerr:
+        print(u'{}'.format(inerr))
+        return(False)
 
 def get_Tags(f):
     import time, os
     #get_logger('MD3Logger Start Get all Metadata of MP3 file', 'MD3Logger', 'DEBUG')
-    #print(f)
 
-    print(f)
+    print(u'{}'.format(f.encode('utf-8', 'surrogateescape')))
 
     try:
         __tags = eyed3.core.load(f)
     except OSError as err:
-        print("OS Error: {0}".format(err))
-        md3.main()
+        print(u"OS Error: {}".format(err))
+        return(False)
     except FileNotFoundError as fnferr:
-        print('fnferr')
-        md3.main()
-    else:
-        print('are')
+        print(u'File Not found: {}'.format('fnferr'))
+        return(False)
 
     __path =''.join((os.path.dirname(f), '/'))
     __mtime = time.strftime("%Y/%m/%d %a - %H:%M:%S", time.localtime(
                 os.path.getmtime(f)))
     __ctime = time.strftime("%Y/%m/%d %a - %H:%M:%S", time.localtime(
                 os.path.getctime(f)))
-    __id3version = str(__tags.tag.version[0]) + '.' + str(
-                __tags.tag.version[1])
+    try:
+        __id3version = str(__tags.tag.version[0]) + '.' + str(__tags.tag.version[1])
+    except AttributeError as atterr:
+        print('Attributr Error in file {}'.format(f))
+        return('Error')
 
     if len(__tags.tag.comments) > 0:
         __comm = __tags.tag.comments[0].text
@@ -284,23 +244,26 @@ def saveCSVf(pf, csvlist):
         print(u' -- CSV file Saved.')
     return True
 
-def correctPath(self, csvlist):
+def correctPath(csvlist):
     #get_logger('MD3Logger Start fix path of CSV file', 'MD3Logger', 'DEBUG')
     for __row in csvlist:
         __row[16] = ''.join((__row[16], '/'))
+        print('Path Was Fixed.')
     return csvlist
 
-def readCSVf(self, pf):
+def readCSVf(pf):
     import csv
     #get_logger('MD3Logger Start Read CSV file', 'MD3Logger', 'DEBUG')
     with open(pf) as __csvfile:
+        print('{} File Was Opened'.format(pf))
         __csvlist = csv.reader(__csvfile)
         return list(__csvlist)
 
-def setAudioTags(self, f, tagName, tagText):
+def setAudioTags(f, tagName, tagText):
     __audiofile = eyed3.load(f)
-    if (__audiofile.tag == None):
+    if (__audiofile.tag != None):
         __audiofile.initTag()
+        print('MetaData of {} Was Writed'.format(f))
 
     __audiofile.tag.artist = ''
 
@@ -319,7 +282,7 @@ def getMP3sTags(mp3s):
         __SongsData.append(__tags)
     return __SongsData
 
-def splitCSVlist(self, csvlist):
+def splitCSVlist(csvlist):
     #get_logger('MD3Logger Start Split CSV file', 'MD3Logger', 'DEBUG')
     __mp3s = []
     for __row in csvlist:
@@ -329,3 +292,47 @@ def splitCSVlist(self, csvlist):
             __mp3s.append(__fp)
     return __mp3s
 
+def saveTagsFromCSV(pf):
+    import os
+    from collections import deque
+    #get_logger('MD3Logger Start Save Tags in CSV file', 'MD3Logger', 'DEBUG')
+    if os.path.isfile(pf):
+        __csvlist = readCSVf(pf)
+    else:
+        print(u'There is no CSV file : !!!', pf)
+        exit(1)
+
+    __csvlist.pop(0)
+    ## .popleft()
+    for __row in __csvlist:
+        __f = ''.join((__row[17], __row[0]))
+        print(__f)
+        audiofile = eyed3.core.load(__f)
+        if __row[1] is not None:
+            audiofile.tag.artist = __row[1]
+        if __row[2] is not None:
+            audiofile.tag.title = __row[2]
+        if __row[3] is not None:
+            audiofile.tag.album = __row[3]
+        if __row[4] is not None:
+            audiofile.tag.album_artist = __row[4]
+        if __row[5] != '':
+            audiofile.tag.track_num = (int(__row[5]))
+            if __row[5] and __row[6] != '':
+                audiofile.tag.track_num = (int(__row[5]), int(__row[6]))
+        if __row[7] != '':
+            audiofile.tag.disc_num = (int(__row[7]))
+            if __row[7] and __row[8] != '':
+                audiofile.tag.disc_num = (int(__row[7]), int(__row(8)))
+        if __row[9] is not None:
+            audiofile.tag.release_date = __row[9]
+        if __row[10] is not None:
+            audiofile.tag.genre = __row[10]
+        if __row[11] is not None:
+            audiofile.tag.comments.set(__row[11])
+        if __row[12] is not None:
+            audiofile.tag.publisher = __row[12]
+        if __row[13] is not None:
+            audiofile.tag.lyrics.set(__row[13])
+        audiofile.tag.save(version=(2, 3, 0))
+        print('MetaData {}  Was Saved.'.format(pf))
